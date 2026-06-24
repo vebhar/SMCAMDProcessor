@@ -4,22 +4,18 @@ steps:
 
 - name: Download MacKernelSDK
   run: |
-    git clone https://github.com/acidanthera/MacKernelSDK.git ../MacKernelSDK
-    echo "MacKernelSDK cloned."
+    git clone https://github.com/acidanthera/MacKernelSDK.git
+    echo "MacKernelSDK cloned successfully."
 
 - name: Compile SMCAMDProcessor & AMDRyzenCPUPM
   run: |
-    # Build with code signing disabled to avoid errors
+    # Build with code signing disabled to avoid exit code 65
     xcodebuild -project SMCAMDProcessor.xcodeproj -scheme "All" -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
-    
-- name: List Build Output (Debug)
-  run: |
-    # This will help us see if the kexts were actually built
-    find build -name "*.kext"
     
 - name: Package Kexts
   run: |
     mkdir -p Payload
+    # Copying built kexts from the standard Xcode build location
     cp -R build/Release/AMDRyzenCPUPowerManagement.kext Payload/ || echo "AMDRyzenCPUPM missing"
     cp -R build/Release/SMCAMDProcessor.kext Payload/ || echo "SMCAMDProcessor missing"
     cd Payload && zip -r ../SMCAMDProcessor-Zen4-Build.zip .
