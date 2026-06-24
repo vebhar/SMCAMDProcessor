@@ -2,40 +2,43 @@ name: Build AMD Power Management Kexts
 
 on:
 push:
-branches: [ master, main ]
+branches:
+- master
+- main
 pull_request:
-branches: [ master, main ]
+branches:
+- master
+- main
 workflow_dispatch:
 
 jobs:
 build:
 name: Build on macOS
 runs-on: macos-latest
-
 steps:
 - name: Checkout Repository
-  uses: actions/checkout@v4
+uses: actions/checkout@v4
 
-- name: Download MacKernelSDK
-  run: |
-    git clone https://github.com/acidanthera/MacKernelSDK.git
-    echo "MacKernelSDK cloned successfully."
+  - name: Download MacKernelSDK
+    run: |
+      git clone https://github.com/acidanthera/MacKernelSDK.git
+      echo "MacKernelSDK cloned successfully."
 
-- name: Compile SMCAMDProcessor & AMDRyzenCPUPM
-  run: |
-    # Build with code signing disabled to avoid exit code 65
-    xcodebuild -project SMCAMDProcessor.xcodeproj -scheme "All" -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
-    
-- name: Package Kexts
-  run: |
-    mkdir -p Payload
-    # Copying built kexts from the standard Xcode build location
-    cp -R build/Release/AMDRyzenCPUPowerManagement.kext Payload/ || echo "AMDRyzenCPUPM missing"
-    cp -R build/Release/SMCAMDProcessor.kext Payload/ || echo "SMCAMDProcessor missing"
-    cd Payload && zip -r ../SMCAMDProcessor-Zen4-Build.zip .
+  - name: Compile SMCAMDProcessor & AMDRyzenCPUPM
+    run: |
+      # Build with code signing disabled to avoid exit code 65
+      xcodebuild -project SMCAMDProcessor.xcodeproj -scheme "All" -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+      
+  - name: Package Kexts
+    run: |
+      mkdir -p Payload
+      # Copying built kexts from the standard Xcode build location
+      cp -R build/Release/AMDRyzenCPUPowerManagement.kext Payload/ || echo "AMDRyzenCPUPM missing"
+      cp -R build/Release/SMCAMDProcessor.kext Payload/ || echo "SMCAMDProcessor missing"
+      cd Payload && zip -r ../SMCAMDProcessor-Zen4-Build.zip .
 
-- name: Upload Kext Artifacts
-  uses: actions/upload-artifact@v4
-  with:
-    name: Zen4-Kexts
-    path: SMCAMDProcessor-Zen4-Build.zip
+  - name: Upload Kext Artifacts
+    uses: actions/upload-artifact@v4
+    with:
+      name: Zen4-Kexts
+      path: SMCAMDProcessor-Zen4-Build.zip
