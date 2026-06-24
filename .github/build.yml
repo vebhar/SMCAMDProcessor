@@ -1,0 +1,39 @@
+name: Build AMD Power Management Kexts
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on macOS
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Download MacKernelSDK
+      run: |
+        git clone https://github.com/acidanthera/MacKernelSDK.git
+        echo "MacKernelSDK cloned successfully."
+
+    - name: Compile SMCAMDProcessor & AMDRyzenCPUPM
+      run: |
+        xcodebuild -project SMCAMDProcessor.xcodeproj -scheme "All" -configuration Release
+        
+    - name: Package Kexts
+      run: |
+        mkdir -p Payload
+        cp -R build/Release/AMDRyzenCPUPowerManagement.kext Payload/
+        cp -R build/Release/SMCAMDProcessor.kext Payload/
+        cd Payload && zip -r ../SMCAMDProcessor-Zen4-Build.zip .
+
+    - name: Upload Kext Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Zen4-Kexts
+        path: SMCAMDProcessor-Zen4-Build.zip
